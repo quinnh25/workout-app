@@ -41,7 +41,6 @@
     .modal-content { background: var(--bg-card); width: 100%; height: 85vh; border-radius: 20px 20px 0 0; padding: 20px; display: flex; flex-direction: column; }
     .search-list { flex: 1; overflow-y: auto; margin-top: 10px; }
     
-    /* Updated search item to look like a clickable card */
     .search-item { padding: 16px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
 
     .auth-container { display: flex; flex-direction: column; justify-content: center; height: 100vh; padding: 20px; }
@@ -186,6 +185,20 @@
       render();
     }
 
+    // Handles the "Next/Enter" key jumping to the next numeric input box
+    function handleEnter(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const inputs = Array.from(document.querySelectorAll('.set-input'));
+        const index = inputs.indexOf(e.target);
+        if (index > -1 && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        } else {
+          e.target.blur(); // Hide keyboard if it's the last input
+        }
+      }
+    }
+
     function render() {
       const content = document.getElementById('main-content');
 
@@ -252,7 +265,9 @@
                 <div class="card flex-between">
                   <div>
                     <strong>${t.name}</strong> <span class="badge type-badge">${t.type}</span>
-                    <div style="font-size: 12px; color: var(--text-muted);">${t.exercises.length} Exercises</div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                      ${t.exercises.length} Exercises ${t.date ? `• Created: ${t.date}` : ''}
+                    </div>
                   </div>
                   <button class="btn btn-primary" style="width: auto; padding: 6px 12px;" onclick="startFromTemplate(${idx})">Start</button>
                 </div>`).join('')}` : ''}
@@ -321,9 +336,9 @@
                 <span style="color: var(--danger); font-size: 14px; font-weight: bold; cursor: pointer; margin-right: 6px;" onclick="removeSet(${exIdx}, ${setIdx})">✕</span>
                 ${set.isDrop ? '<span class="badge drop-badge">DS</span>' : setIdx + 1}
               </td>
-              ${hasWeight ? `<td><input type="number" class="set-input" value="${set.weight}" onchange="updateSet(${exIdx},${setIdx},'weight',this.value)" placeholder="lbs"></td>` : ''}
-              ${hasReps   ? `<td><input type="number" class="set-input" value="${set.reps}"   onchange="updateSet(${exIdx},${setIdx},'reps',this.value)"   placeholder="reps"></td>` : ''}
-              ${hasTime   ? `<td><input type="number" class="set-input" value="${set.time}"   onchange="updateSet(${exIdx},${setIdx},'time',this.value)"   placeholder="sec"></td>` : ''}
+              ${hasWeight ? `<td><input type="number" inputmode="decimal" enterkeyhint="next" class="set-input" value="${set.weight}" onchange="updateSet(${exIdx},${setIdx},'weight',this.value)" onkeydown="handleEnter(event)" placeholder="lbs"></td>` : ''}
+              ${hasReps   ? `<td><input type="number" inputmode="numeric" enterkeyhint="next" pattern="[0-9]*" class="set-input" value="${set.reps}"   onchange="updateSet(${exIdx},${setIdx},'reps',this.value)" onkeydown="handleEnter(event)" placeholder="reps"></td>` : ''}
+              ${hasTime   ? `<td><input type="number" inputmode="numeric" enterkeyhint="next" pattern="[0-9]*" class="set-input" value="${set.time}"   onchange="updateSet(${exIdx},${setIdx},'time',this.value)" onkeydown="handleEnter(event)" placeholder="sec"></td>` : ''}
               <td><button class="check-btn ${set.completed ? 'done' : ''}" onclick="toggleSet(${exIdx},${setIdx})">✔</button></td>
             </tr>`).join('');
 
@@ -533,7 +548,6 @@
 
     // Helper function to render a single search item with toggle states
     function getSearchItemHtml(ex) {
-      // Check if this exercise is currently in the active workout
       const isSelected = state.activeWorkout.exercises.some(e => e.id === ex.id);
       
       const bgStyle = isSelected ? 'background-color: rgba(200,255,0,0.1); border-color: var(--accent);' : '';
@@ -580,7 +594,7 @@
     function closeModal(force = false) {
       if(force || event.target.classList.contains('modal-overlay')) {
         document.getElementById('modal-container').innerHTML = '';
-        render(); // This ensures the workout view behind the modal updates when closed
+        render(); 
       }
     }
 
@@ -590,22 +604,18 @@
 
       const existingIdx = state.activeWorkout.exercises.findIndex(e => e.id === id);
       
-      // If it's already in the workout, remove it (Deselect)
       if (existingIdx >= 0) {
-        // Safe check: Prevent accidentally deleting an exercise that already has data typed into it
         const existingEx = state.activeWorkout.exercises[existingIdx];
         const hasData = existingEx.sets.some(s => s.weight !== '' || s.reps !== '' || s.time !== '' || s.completed);
         
         if (hasData) {
             if (!confirm(`You have already typed data for ${exDef.name}. Remove it anyway?`)) {
-                return; // Abort removal
+                return;
             }
         }
 
-        // Remove from workout state
         state.activeWorkout.exercises.splice(existingIdx, 1);
         
-        // Update the UI card instantly to look unselected
         if (el) {
             el.style.backgroundColor = 'transparent';
             el.style.borderColor = 'var(--border)';
@@ -613,14 +623,12 @@
             if(icon) { icon.innerText = '+'; }
         }
       } 
-      // If it's not in the workout, add it (Select)
       else {
         state.activeWorkout.exercises.push({
           id: exDef.id, name: exDef.name, fields: exDef.fields, isSuperset: false,
           sets: [{ weight: '', reps: '', time: '', completed: false, isDrop: false }]
         });
         
-        // Update the UI card instantly to look selected
         if (el) {
             el.style.backgroundColor = 'rgba(200,255,0,0.1)';
             el.style.borderColor = 'var(--accent)';
@@ -644,17 +652,12 @@
       saveActive(); render();
     }
 
-    // New Function: Delete a specific set
     function removeSet(exIdx, setIdx) {
       const sets = state.activeWorkout.exercises[exIdx].sets;
-      
-      // If there is only 1 set left, ask to delete the whole exercise
       if (sets.length === 1) {
           removeEx(exIdx);
           return;
       }
-      
-      // Otherwise, remove just that set
       sets.splice(setIdx, 1);
       saveActive();
       render();
@@ -726,11 +729,18 @@
       let finalElapsed = Date.now() - w.startTime - w.pauseTime;
       if(w.isPaused) finalElapsed -= (Date.now() - w.lastPauseStart);
       w.duration = Math.floor(finalElapsed / 1000);
+      
       if(saveTemplate) {
         const templates = DB.get('templates') || [];
-        templates.push({ name: w.name, type: w.type, exercises: JSON.parse(JSON.stringify(w.exercises)) });
+        templates.push({ 
+          name: w.name, 
+          type: w.type, 
+          exercises: JSON.parse(JSON.stringify(w.exercises)),
+          date: new Date().toLocaleDateString() // Adds the creation date
+        });
         DB.set('templates', templates);
       }
+      
       const history = DB.get('workouts') || [];
       history.push(w);
       DB.set('workouts', history);
