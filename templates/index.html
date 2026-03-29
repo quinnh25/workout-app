@@ -110,7 +110,9 @@
       username: DB.get('username'),
       view: DB.get('user_id') ? 'home' : 'auth',
       activeWorkout: DB.get('activeWorkout'),
-      timerInterval: null
+      timerInterval: null,
+      currentMonth: new Date().getMonth(),
+      currentYear: new Date().getFullYear()
     };
 
     const WORKOUT_TYPES = ["Upper", "Lower", "Push", "Pull", "Legs", "Full Body", "Cardio", "Other"];
@@ -197,6 +199,19 @@
           e.target.blur(); // Hide keyboard if it's the last input
         }
       }
+    }
+
+    // Calendar navigation logic
+    function changeMonth(direction) {
+      state.currentMonth += direction;
+      if (state.currentMonth > 11) {
+        state.currentMonth = 0;
+        state.currentYear++;
+      } else if (state.currentMonth < 0) {
+        state.currentMonth = 11;
+        state.currentYear--;
+      }
+      render();
     }
 
     function render() {
@@ -398,11 +413,13 @@
 
       if (state.view === 'calendar') {
         const history = DB.get('workouts') || [];
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = today.getMonth();
+        const year = state.currentYear;
+        const month = state.currentMonth;
+        
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const monthName = new Date(year, month, 1).toLocaleString('default', { month: 'long' });
+        
         let daysHtml = '';
         for(let i = 0; i < firstDay; i++) daysHtml += `<div></div>`;
         for(let day = 1; day <= daysInMonth; day++) {
@@ -416,10 +433,15 @@
               ${hasWorkout ? '<div class="cal-dot"></div>' : ''}
             </div>`;
         }
+        
         content.innerHTML = `
           <div class="header">Calendar</div>
           <div class="card">
-            <h3 style="text-align:center;margin-bottom:12px;">${today.toLocaleString('default', { month: 'long' })} ${year}</h3>
+            <div class="flex-between" style="margin-bottom: 16px;">
+              <button class="btn" style="width: auto; padding: 6px 16px;" onclick="changeMonth(-1)">◀</button>
+              <h3 style="margin: 0; font-size: 18px;">${monthName} ${year}</h3>
+              <button class="btn" style="width: auto; padding: 6px 16px;" onclick="changeMonth(1)">▶</button>
+            </div>
             <div class="cal-grid">
               <div class="cal-header">Sun</div><div class="cal-header">Mon</div><div class="cal-header">Tue</div>
               <div class="cal-header">Wed</div><div class="cal-header">Thu</div><div class="cal-header">Fri</div><div class="cal-header">Sat</div>
@@ -546,7 +568,6 @@
       nav('workout');
     }
 
-    // Helper function to render a single search item with toggle states
     function getSearchItemHtml(ex) {
       const isSelected = state.activeWorkout.exercises.some(e => e.id === ex.id);
       
@@ -736,7 +757,7 @@
           name: w.name, 
           type: w.type, 
           exercises: JSON.parse(JSON.stringify(w.exercises)),
-          date: new Date().toLocaleDateString() // Adds the creation date
+          date: new Date().toLocaleDateString()
         });
         DB.set('templates', templates);
       }
