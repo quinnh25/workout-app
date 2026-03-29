@@ -141,25 +141,44 @@
       }
     }
 
-    async function login() {
-      const u = document.getElementById('username').value;
-      const p = document.getElementById('password').value;
-      if(!u || !p) return alert("Enter username and password");
-      const res = await apiCall('/login', {username: u, password: p});
-      if(res.error) return alert(res.error);
-      
-      DB.set('user_id', res.user_id);
-      DB.set('username', u);
-      DB.set('workouts', res.workouts || []);
-      if (res.templates) DB.set('templates', res.templates);
-      if (res.exercises) DB.set('exercises', res.exercises);
-      if (res.activeWorkout) DB.set('activeWorkout', res.activeWorkout);
-      
-      state.user_id = res.user_id;
-      state.username = u;
-      state.activeWorkout = DB.get('activeWorkout');
-      nav('home');
-    }
+  async function login() {
+  const u = document.getElementById('username').value;
+  const p = document.getElementById('password').value;
+  if(!u || !p) return alert("Enter username and password");
+  
+  const res = await apiCall('/login', {username: u, password: p});
+  
+  if(res.error) return alert(res.error);
+  
+  // 1. Save core user info
+  DB.set('user_id', res.user_id);
+  DB.set('username', u);
+  
+  // 2. Save ALL data categories from the DB to local storage
+  DB.set('workouts', res.workouts || []);
+  DB.set('templates', res.templates || []);
+  
+  // Only overwrite exercises if the server actually has custom ones
+  if (res.exercises) {
+    DB.set('exercises', res.exercises);
+  }
+  
+  // 3. Handle Active Workout (The "Resume" feature)
+  if (res.activeWorkout) {
+    DB.set('activeWorkout', res.activeWorkout);
+    state.activeWorkout = res.activeWorkout;
+  } else {
+    DB.set('activeWorkout', null);
+    state.activeWorkout = null;
+  }
+  
+  // 4. Update local state and move to home
+  state.user_id = res.user_id;
+  state.username = u;
+  
+  console.log("Login Successful. Data synced:", res);
+  nav('home');
+}
 
     async function register() {
       const u = document.getElementById('username').value;

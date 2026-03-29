@@ -70,13 +70,13 @@ def login():
         active_workout = json.loads(user.active_workout_json) if user.active_workout_json != "null" else None
 
         return jsonify({
-            'message': 'Logged in', 
-            'user_id': user.id, 
-            'workouts': workouts,
-            'templates': templates,
-            'exercises': exercises,
-            'activeWorkout': active_workout
-        })
+    'message': 'Logged in', 
+    'user_id': user.id, 
+    'workouts': json.loads(user.workouts_json),
+    'templates': json.loads(user.templates_json), # MAKE SURE THIS LINE EXISTS
+    'exercises': json.loads(user.exercises_json), # AND THIS ONE
+    'activeWorkout': json.loads(user.active_workout_json) # AND THIS ONE
+})
         
     return jsonify({'error': 'Invalid credentials'}), 401
 
