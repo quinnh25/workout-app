@@ -117,6 +117,14 @@
 
     const WORKOUT_TYPES = ["Upper", "Lower", "Push", "Pull", "Legs", "Full Body", "Cardio", "Other"];
 
+    let syncTimeout = null;
+    function debounceSync() {
+      if (syncTimeout) clearTimeout(syncTimeout);
+      syncTimeout = setTimeout(() => {
+        syncData();
+      }, 1500);
+    }
+
     async function apiCall(endpoint, data) {
       const isLocal = window.location.href.includes("127.0.0.1") || window.location.href.includes("localhost");
       const baseUrl = isLocal ? "http://127.0.0.1:5000" : "";
@@ -129,7 +137,6 @@
         return await res.json();
       } catch (err) {
         console.error("API Error:", err);
-        alert("Network error. Is your Python backend running?");
         return { error: "Network error" };
       }
     }
@@ -140,11 +147,17 @@
       if(!u || !p) return alert("Enter username and password");
       const res = await apiCall('/login', {username: u, password: p});
       if(res.error) return alert(res.error);
+      
       DB.set('user_id', res.user_id);
       DB.set('username', u);
       DB.set('workouts', res.workouts || []);
+      if (res.templates) DB.set('templates', res.templates);
+      if (res.exercises) DB.set('exercises', res.exercises);
+      if (res.activeWorkout) DB.set('activeWorkout', res.activeWorkout);
+      
       state.user_id = res.user_id;
       state.username = u;
+      state.activeWorkout = DB.get('activeWorkout');
       nav('home');
     }
 
@@ -159,17 +172,26 @@
 
     function logout() {
       if(!confirm("Are you sure you want to log out?")) return;
-      DB.clear();
+      syncData(); // Final push before clearing
+      DB.clear(); // Safely clear local device so next user starts fresh
       state.user_id = null;
+      state.username = null;
       state.activeWorkout = null;
+      if (state.timerInterval) clearInterval(state.timerInterval);
       nav('auth');
     }
 
     async function syncData() {
       if(!state.user_id) return;
-      const workouts = DB.get('workouts') || [];
-      const res = await apiCall('/sync_workouts', { user_id: state.user_id, workouts });
-      console.log("Sync status:", res.message);
+      const data = {
+        user_id: state.user_id,
+        workouts: DB.get('workouts') || [],
+        templates: DB.get('templates') || [],
+        exercises: DB.get('exercises') || DEFAULT_EXERCISES,
+        activeWorkout: state.activeWorkout
+      };
+      // Pushing to a unified endpoint that saves EVERYTHING
+      await apiCall('/sync_data', data); 
     }
 
     function nav(view) {
@@ -187,7 +209,6 @@
       render();
     }
 
-    // Handles the "Next/Enter" key jumping to the next numeric input box
     function handleEnter(e) {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -196,12 +217,11 @@
         if (index > -1 && index < inputs.length - 1) {
           inputs[index + 1].focus();
         } else {
-          e.target.blur(); // Hide keyboard if it's the last input
+          e.target.blur();
         }
       }
     }
 
-    // Calendar navigation logic
     function changeMonth(direction) {
       state.currentMonth += direction;
       if (state.currentMonth > 11) {
@@ -235,7 +255,6 @@
           const templates = DB.get('templates') || [];
           const history = DB.get('workouts') || [];
 
-          // Helper function for relative dates
           const getRelativeTime = (dateStr) => {
             const workoutDate = new Date(dateStr);
             const now = new Date();
@@ -245,20 +264,18 @@
             if (diffInDays < 1) return "Today";
             if (diffInDays === 1) return "Yesterday";
             if (diffInDays < 30) return `${diffInDays} days ago`;
-            
             const diffInMonths = Math.floor(diffInDays / 30);
             if (diffInMonths < 12) return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
-            
             const diffInYears = Math.floor(diffInDays / 365);
             return `Over ${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
           };
 
           content.innerHTML = `
             <div class="header flex-between">
-  <span>Iron Log</span>
-  <button class="btn" style="width: auto; padding: 6px 12px; font-size: 12px;" onclick="logout()">Log Out</button>
-</div>
-            ${state.activeWorkout ? `
+              <span>Iron Log</span>
+              <button class="btn" style="width: auto; padding: 6px 12px; font-size: 12px;" onclick="logout()">Log Out</button>
+            </div>
+            ${state.activeWorkout && !state.activeWorkout.isTemplateEdit ? `
               <div class="card" style="border-color: var(--accent);" onclick="nav('workout')">
                 <div class="flex-between">
                   <div>
@@ -280,14 +297,20 @@
             ${templates.length > 0 ? `
               <div class="header" style="border:none; font-size: 18px; padding-bottom: 0;">Templates</div>
               ${templates.map((t, idx) => `
-                <div class="card flex-between">
-                  <div>
-                    <strong>${t.name}</strong> <span class="badge type-badge">${t.type}</span>
-                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-                      ${t.exercises.length} Exercises ${t.date ? `• Created: ${t.date}` : ''}
+                <div class="card">
+                  <div class="flex-between" style="margin-bottom: 8px;">
+                    <div>
+                      <strong>${t.name}</strong> <span class="badge type-badge">${t.type}</span>
+                      <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                        ${t.exercises.length} Exercises ${t.date ? `• ${t.date}` : ''}
+                      </div>
                     </div>
+                    <button class="btn btn-primary" style="width: auto; padding: 6px 12px;" onclick="startFromTemplate(${idx})">Start</button>
                   </div>
-                  <button class="btn btn-primary" style="width: auto; padding: 6px 12px;" onclick="startFromTemplate(${idx})">Start</button>
+                  <div class="flex-between" style="border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px;">
+                    <button class="btn" style="width: 48%; padding: 6px; font-size: 12px;" onclick="editTemplate(${idx})">✎ Edit</button>
+                    <button class="btn btn-danger" style="width: 48%; padding: 6px; font-size: 12px;" onclick="deleteTemplate(${idx})">✕ Delete</button>
+                  </div>
                 </div>`).join('')}` : ''}
             <div class="header" style="border:none; font-size: 18px; padding-bottom: 0;">Recent History</div>
             ${[...history].reverse().slice(0, 10).map((w, idx) => `
@@ -313,8 +336,10 @@
         }
         const w = state.activeWorkout;
         const history = DB.get('workouts') || [];
+        const isEdit = w.isTemplateEdit;
 
         function getLastSession(exId) {
+          if (isEdit) return null; // Hide last session data when editing template
           for (let i = history.length - 1; i >= 0; i--) {
             const found = history[i].exercises.find(e => e.id === exId);
             if (found && found.sets && found.sets.length > 0) {
@@ -391,26 +416,38 @@
 
         content.innerHTML = `
           <div class="header flex-between">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <span id="workout-timer" class="timer-display">0:00</span>
-              <button class="btn" style="width:auto;padding:4px 8px;font-size:12px;" onclick="togglePause()">
-                ${w.isPaused ? '▶ Resume' : '⏸ Pause'}
-              </button>
-            </div>
+            ${isEdit ? `
+              <div style="font-size: 18px; font-weight: bold; color: var(--accent);">Editing Template</div>
+            ` : `
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span id="workout-timer" class="timer-display">0:00</span>
+                <button class="btn" style="width:auto;padding:4px 8px;font-size:12px;" onclick="togglePause()">
+                  ${w.isPaused ? '▶ Resume' : '⏸ Pause'}
+                </button>
+              </div>
+            `}
             <div style="display:flex;gap:8px;">
               <button class="btn btn-danger" style="width:auto;padding:8px 12px;font-size:14px;background:transparent;" onclick="cancelWorkout()">Cancel</button>
-              <button class="btn btn-primary" style="width:auto;padding:8px 16px;font-size:14px;" onclick="finishWorkout()">Finish</button>
+              <button class="btn btn-primary" style="width:auto;padding:8px 16px;font-size:14px;" onclick="${isEdit ? 'saveEditedTemplate()' : 'finishWorkout()'}">${isEdit ? 'Save' : 'Finish'}</button>
             </div>
           </div>
-          <div style="padding:12px 12px 0 12px;">
-            <div class="badge type-badge" style="display:inline-block;font-size:14px;padding:4px 8px;">${w.type}</div>
-            <strong style="margin-left:8px;">${w.name}</strong>
+          <div style="padding:12px 12px 0 12px; display:flex; gap: 8px;">
+            ${isEdit ? `
+              <select class="input-field" style="width: 35%; padding: 8px; margin: 0;" onchange="state.activeWorkout.type = this.value; saveActive();">
+                ${WORKOUT_TYPES.map(t => `<option value="${t}" ${w.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+              </select>
+              <input type="text" class="input-field" style="width: 65%; padding: 8px; margin: 0;" value="${w.name}" onchange="state.activeWorkout.name = this.value; saveActive();">
+            ` : `
+              <div class="badge type-badge" style="display:inline-block;font-size:14px;padding:4px 8px;">${w.type}</div>
+              <strong style="margin-left:8px;">${w.name}</strong>
+            `}
           </div>
           ${exercisesHtml}
           <div style="padding:12px;padding-bottom:40px;">
             <button class="btn" style="border-style:dashed;padding:16px;" onclick="openSearchModal()">🔍 Add Exercise</button>
           </div>`;
-        startTimerTick();
+          
+        if (!isEdit) startTimerTick();
         return;
       }
 
@@ -517,6 +554,7 @@
       const id = name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now();
       exercises.push({ id, name, fields });
       DB.set('exercises', exercises);
+      debounceSync();
       render();
     }
 
@@ -526,13 +564,49 @@
       if (!confirm(`Remove "${ex.name}"?`)) return;
       exercises.splice(idx, 1);
       DB.set('exercises', exercises);
+      debounceSync();
       render();
     }
 
     function resetExercises() {
       if (!confirm("Reset to default exercise list? Your custom exercises will be removed.")) return;
       DB.set('exercises', DEFAULT_EXERCISES);
+      debounceSync();
       render();
+    }
+
+    function deleteTemplate(idx) {
+      if(!confirm("Permanently delete this template?")) return;
+      const templates = DB.get('templates') || [];
+      templates.splice(idx, 1);
+      DB.set('templates', templates);
+      debounceSync();
+      render();
+    }
+
+    function editTemplate(idx) {
+      const template = DB.get('templates')[idx];
+      state.activeWorkout = JSON.parse(JSON.stringify(template));
+      state.activeWorkout.isTemplateEdit = true;
+      state.activeWorkout.templateIdx = idx;
+      saveActive();
+      nav('workout');
+    }
+
+    function saveEditedTemplate() {
+      const templates = DB.get('templates') || [];
+      const w = state.activeWorkout;
+      templates[w.templateIdx] = {
+        name: w.name,
+        type: w.type,
+        exercises: w.exercises,
+        date: new Date().toLocaleDateString() // update date modified
+      };
+      DB.set('templates', templates);
+      state.activeWorkout = null;
+      DB.set('activeWorkout', null);
+      debounceSync();
+      nav('home');
     }
 
     function startWorkout() {
@@ -728,7 +802,7 @@
     function startTimerTick() {
       if(state.timerInterval) clearInterval(state.timerInterval);
       state.timerInterval = setInterval(() => {
-        if(state.view === 'workout' && state.activeWorkout) {
+        if(state.view === 'workout' && state.activeWorkout && !state.activeWorkout.isTemplateEdit) {
           const w = state.activeWorkout;
           const el = document.getElementById('workout-timer');
           if(!el) return;
@@ -770,18 +844,24 @@
       DB.set('workouts', history);
       state.activeWorkout = null;
       DB.set('activeWorkout', null);
-      clearInterval(state.timerInterval);
-      syncData();
+      if (state.timerInterval) clearInterval(state.timerInterval);
+      syncData(); // Hard sync immediately on finish
       nav('home');
     }
 
-    function saveActive() { DB.set('activeWorkout', state.activeWorkout); }
+    function saveActive() { 
+      DB.set('activeWorkout', state.activeWorkout); 
+      debounceSync(); // Auto sync changes quietly in the background
+    }
 
     function cancelWorkout() {
-      if(confirm("Cancel this workout? It won't be saved.")) {
+      const isEdit = state.activeWorkout && state.activeWorkout.isTemplateEdit;
+      const msg = isEdit ? "Discard changes to this template?" : "Cancel this workout? It won't be saved.";
+      if(confirm(msg)) {
         state.activeWorkout = null;
         DB.set('activeWorkout', null);
         if(state.timerInterval) clearInterval(state.timerInterval);
+        debounceSync();
         nav('home');
       }
     }
