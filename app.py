@@ -1,3 +1,4 @@
+from flask_cors import CORS  # <--- LINE 1
 from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -6,7 +7,7 @@ import json
 import os
 
 app = Flask(__name__)
-CORS(app)
+CORS(app)  # <--- LINE 2 (Right under app = Flask)
 
 # Sets up the SQLite database in your ironlog folder
 basedir = os.path.abspath(os.path.dirname(__file__))

@@ -8,26 +8,22 @@
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    /* CORE MOBILE STYLES */
     :root { --bg: #080808; --bg-card: #141414; --accent: #c8ff00; --text: #f2f2f2; --text-muted: #888; --border: #2e2e2e; --danger: #ff4444; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Exo 2', sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-    
-    /* LAYOUT */
+
     #main-content { flex: 1; overflow-y: auto; padding-bottom: 80px; }
-    .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 100; transition: 0.3s; }
+    .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 100; }
     .nav-btn { background: none; border: none; color: var(--text-muted); font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px; width: 25%; cursor: pointer;}
     .nav-btn.active { color: var(--accent); font-weight: bold; }
-    
-    /* CARDS & INPUTS */
+
     .card { background: var(--bg-card); margin: 12px; border-radius: 12px; border: 1px solid var(--border); padding: 16px; }
     .btn { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); padding: 12px 16px; border-radius: 8px; font-weight: 600; width: 100%; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;}
     .btn-primary { background: var(--accent); color: #000; border: none; }
     .btn-danger { background: rgba(255, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); }
     .input-field { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 6px; width: 100%; font-size: 16px; margin-bottom: 10px; }
     select.input-field { appearance: none; }
-    
-    /* EXERCISE TABLES */
+
     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
     th { color: var(--text-muted); font-size: 12px; text-align: center; padding-bottom: 8px; font-weight: normal; }
     td { padding: 6px 2px; }
@@ -35,30 +31,35 @@
     .set-input:focus { border-color: var(--accent); outline: none; }
     .check-btn { width: 100%; height: 44px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: transparent; display: flex; justify-content: center; align-items: center; font-size: 18px; transition: 0.2s; }
     .check-btn.done { background: rgba(200,255,0,0.2); border-color: var(--accent); color: var(--accent); }
-    
-    /* SUPERSET & BADGES */
+
     .superset-bracket { border-left: 3px solid #38bdf8; border-radius: 0 12px 12px 0; margin-top: 4px; border-top: none;}
     .badge { font-size: 10px; background: #333; color: #fff; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
     .drop-badge { background: #ff4040; }
     .type-badge { background: var(--accent); color: #000; }
-    
-    /* MODALS & AUTH */
+
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 200; display: flex; justify-content: center; align-items: flex-end; }
     .modal-content { background: var(--bg-card); width: 100%; height: 85vh; border-radius: 20px 20px 0 0; padding: 20px; display: flex; flex-direction: column; }
     .search-list { flex: 1; overflow-y: auto; margin-top: 10px; }
     .search-item { padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-    
+
     .auth-container { display: flex; flex-direction: column; justify-content: center; height: 100vh; padding: 20px; }
     .auth-brand { text-align: center; font-size: 32px; font-weight: bold; margin-bottom: 40px; color: var(--accent); letter-spacing: 2px;}
 
-    /* CALENDAR */
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
     .cal-header { text-align: center; font-size: 12px; color: var(--text-muted); padding: 5px 0; }
     .cal-day { aspect-ratio: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; position: relative; }
     .cal-day.active { border-color: var(--accent); background: rgba(200,255,0,0.1); }
     .cal-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-top: 2px; }
 
-    /* UTILITIES */
+    .ex-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .ex-row:last-child { border-bottom: none; }
+    .ex-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+    .del-btn { background: none; border: none; color: var(--danger); font-size: 20px; cursor: pointer; padding: 4px 8px; flex-shrink: 0; }
+
+    .field-toggles { display: flex; gap: 8px; margin-bottom: 12px; }
+    .field-toggle { flex: 1; padding: 10px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; transition: 0.15s; font-family: 'Exo 2', sans-serif; }
+    .field-toggle.on { background: var(--accent); color: #000; border-color: var(--accent); }
+
     .flex-between { display: flex; justify-content: space-between; align-items: center; }
     .header { font-size: 22px; font-weight: 700; padding: 16px; border-bottom: 1px solid var(--border); background: var(--bg-card); position: sticky; top: 0; z-index: 10; }
     .hidden { display: none !important; }
@@ -73,18 +74,35 @@
     <button class="nav-btn active" onclick="nav('home')">Home</button>
     <button class="nav-btn" onclick="nav('workout')">Workout</button>
     <button class="nav-btn" onclick="nav('calendar')">Calendar</button>
-    <button class="nav-btn" onclick="nav('stats')">Stats</button>
+    <button class="nav-btn" onclick="nav('exercises')">Exercises</button>
   </nav>
 
   <div id="modal-container"></div>
 
   <script>
-    // --- DATABASE & STATE ---
     const DB = {
       get: (key) => JSON.parse(localStorage.getItem(`ironlog_${key}`)) || null,
       set: (key, val) => localStorage.setItem(`ironlog_${key}`, JSON.stringify(val)),
       clear: () => { localStorage.clear(); }
     };
+
+    const DEFAULT_EXERCISES = [
+      { id: 'bench',    name: 'Bench Press',     fields: ['weight', 'reps'] },
+      { id: 'squat',    name: 'Barbell Squat',   fields: ['weight', 'reps'] },
+      { id: 'deadlift', name: 'Deadlift',         fields: ['weight', 'reps'] },
+      { id: 'ohp',      name: 'Overhead Press',  fields: ['weight', 'reps'] },
+      { id: 'pullup',   name: 'Pull-Ups',         fields: ['weight', 'reps'] },
+      { id: 'row',      name: 'Barbell Row',      fields: ['weight', 'reps'] },
+      { id: 'curl',     name: 'Bicep Curl',       fields: ['weight', 'reps'] },
+      { id: 'plank',    name: 'Plank',            fields: ['time'] },
+      { id: 'run',      name: 'Treadmill',        fields: ['time'] },
+      { id: 'bike',     name: 'Stationary Bike',  fields: ['time'] }
+    ];
+
+    if (!DB.get('exercises')) DB.set('exercises', DEFAULT_EXERCISES);
+
+    function getExercises() { return DB.get('exercises') || []; }
+    function showDay(el) { alert(el.dataset.date + ': ' + el.dataset.info); }
 
     let state = {
       user_id: DB.get('user_id'),
@@ -94,33 +112,21 @@
       timerInterval: null
     };
 
-    // Global Exercise Database
-    const EXERCISES = [
-      { id: 'bench', name: 'Bench Press', fields: ['weight', 'reps'] },
-      { id: 'squat', name: 'Barbell Squat', fields: ['weight', 'reps'] },
-      { id: 'deadlift', name: 'Deadlift', fields: ['weight', 'reps'] },
-      { id: 'ohp', name: 'Overhead Press', fields: ['weight', 'reps'] },
-      { id: 'pullup', name: 'Pull-Ups', fields: ['weight', 'reps'] }, 
-      { id: 'row', name: 'Barbell Row', fields: ['weight', 'reps'] },
-      { id: 'curl', name: 'Bicep Curl', fields: ['weight', 'reps'] },
-      { id: 'plank', name: 'Plank', fields: ['time'] },
-      { id: 'run', name: 'Treadmill', fields: ['time'] },
-      { id: 'bike', name: 'Stationary Bike', fields: ['time'] }
-    ];
-
     const WORKOUT_TYPES = ["Upper", "Lower", "Push", "Pull", "Legs", "Full Body", "Cardio", "Other"];
 
-    // --- CLOUD SYNC & AUTH ---
     async function apiCall(endpoint, data) {
+      const isLocal = window.location.href.includes("127.0.0.1") || window.location.href.includes("localhost");
+      const baseUrl = isLocal ? "http://127.0.0.1:5000" : "";
       try {
-        const res = await fetch(endpoint, {
+        const res = await fetch(baseUrl + endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
         return await res.json();
       } catch (err) {
-        alert("Network error. Check your connection.");
+        console.error("API Error:", err);
+        alert("Network error. Is your Python backend running?");
         return { error: "Network error" };
       }
     }
@@ -129,15 +135,11 @@
       const u = document.getElementById('username').value;
       const p = document.getElementById('password').value;
       if(!u || !p) return alert("Enter username and password");
-      
       const res = await apiCall('/login', {username: u, password: p});
       if(res.error) return alert(res.error);
-      
-      // Save login state and server data
       DB.set('user_id', res.user_id);
       DB.set('username', u);
       DB.set('workouts', res.workouts || []);
-      
       state.user_id = res.user_id;
       state.username = u;
       nav('home');
@@ -147,10 +149,8 @@
       const u = document.getElementById('username').value;
       const p = document.getElementById('password').value;
       if(!u || !p) return alert("Enter username and password");
-      
       const res = await apiCall('/register', {username: u, password: p});
       if(res.error) return alert(res.error);
-      
       alert("Account created! You can now log in.");
     }
 
@@ -165,21 +165,18 @@
     async function syncData() {
       if(!state.user_id) return;
       const workouts = DB.get('workouts') || [];
-      const res = await apiCall('/sync_workouts', { user_id: state.user_id, workouts: workouts });
+      const res = await apiCall('/sync_workouts', { user_id: state.user_id, workouts });
       console.log("Sync status:", res.message);
     }
 
-    // --- NAVIGATION ---
     function nav(view) {
       state.view = view;
       const navBar = document.getElementById('main-nav');
-      
       if(view === 'auth') {
         navBar.style.display = 'none';
       } else {
         navBar.style.display = 'flex';
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        // Find the button that matches the view to highlight it
         const btns = Array.from(document.querySelectorAll('.nav-btn'));
         const activeBtn = btns.find(b => b.innerText.toLowerCase() === view);
         if(activeBtn) activeBtn.classList.add('active');
@@ -187,10 +184,9 @@
       render();
     }
 
-    // --- RENDER LOGIC ---
     function render() {
       const content = document.getElementById('main-content');
-      
+
       if (state.view === 'auth') {
         content.innerHTML = `
           <div class="auth-container">
@@ -201,15 +197,32 @@
               <button class="btn btn-primary" style="margin-bottom: 12px; padding: 14px;" onclick="login()">Log In</button>
               <button class="btn" style="padding: 14px;" onclick="register()">Create Account</button>
             </div>
-          </div>
-        `;
+          </div>`;
         return;
       }
 
-      if (state.view === 'home') {
+    if (state.view === 'home') {
         const templates = DB.get('templates') || [];
         const history = DB.get('workouts') || [];
-        
+
+        // Helper function for relative dates
+        const getRelativeTime = (dateStr) => {
+          const workoutDate = new Date(dateStr);
+          const now = new Date();
+          const diffInSeconds = Math.floor((now - workoutDate) / 1000);
+          const diffInDays = Math.floor(diffInSeconds / 86400);
+
+          if (diffInDays < 1) return "Today";
+          if (diffInDays === 1) return "Yesterday";
+          if (diffInDays < 30) return `${diffInDays} days ago`;
+          
+          const diffInMonths = Math.floor(diffInDays / 30);
+          if (diffInMonths < 12) return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
+          
+          const diffInYears = Math.floor(diffInDays / 365);
+          return `Over ${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
+        };
+
         content.innerHTML = `
           <div class="header">Iron Log</div>
           ${state.activeWorkout ? `
@@ -224,7 +237,6 @@
                 <span style="color: var(--accent); font-size: 20px;">▶</span>
               </div>
             </div>` : ''}
-            
           <div class="card">
             <input type="text" id="new-workout-name" class="input-field" placeholder="Workout Name (e.g., Morning Push)">
             <select id="new-workout-type" class="input-field">
@@ -232,175 +244,257 @@
             </select>
             <button class="btn btn-primary" onclick="startWorkout()">+ Start Empty Workout</button>
           </div>
-
           ${templates.length > 0 ? `
-          <div class="header" style="border:none; font-size: 18px; padding-bottom: 0;">Templates</div>
-          ${templates.map((t, idx) => `
-            <div class="card flex-between">
-              <div>
-                <strong>${t.name}</strong> <span class="badge type-badge">${t.type}</span>
-                <div style="font-size: 12px; color: var(--text-muted);">${t.exercises.length} Exercises</div>
-              </div>
-              <button class="btn btn-primary" style="width: auto; padding: 6px 12px;" onclick="startFromTemplate(${idx})">Start</button>
-            </div>
-          `).join('')}` : ''}
-
+            <div class="header" style="border:none; font-size: 18px; padding-bottom: 0;">Templates</div>
+            ${templates.map((t, idx) => `
+              <div class="card flex-between">
+                <div>
+                  <strong>${t.name}</strong> <span class="badge type-badge">${t.type}</span>
+                  <div style="font-size: 12px; color: var(--text-muted);">${t.exercises.length} Exercises</div>
+                </div>
+                <button class="btn btn-primary" style="width: auto; padding: 6px 12px;" onclick="startFromTemplate(${idx})">Start</button>
+              </div>`).join('')}` : ''}
           <div class="header" style="border:none; font-size: 18px; padding-bottom: 0;">Recent History</div>
-          ${history.reverse().slice(0,5).map(w => `
-            <div class="card">
+          ${[...history].reverse().slice(0, 10).map((w, idx) => `
+            <div class="card" onclick="viewWorkoutDetails(${idx})" style="cursor: pointer;">
               <div class="flex-between">
                 <strong>${w.name} <span class="badge type-badge">${w.type}</span></strong>
-                <span class="text-muted" style="font-size: 12px;">${w.date}</span>
+                <div style="text-align: right;">
+                  <div style="font-size: 12px; color: var(--text-muted);">${w.date}</div>
+                  <div style="font-size: 10px; color: var(--accent); font-weight: bold;">${getRelativeTime(w.date)}</div>
+                </div>
               </div>
               <div style="font-size:14px; color:var(--text-muted); margin-top:6px;">
                 ⏱ ${Math.round(w.duration/60)} mins • 🏋️ ${w.exercises.length} exercises
               </div>
-            </div>
-          `).join('') || '<div class="card" style="text-align:center; color:var(--text-muted);">No completed workouts yet.</div>'}
-        `;
-      } 
-      
-      else if (state.view === 'workout') {
+            </div>`).join('') || '<div class="card" style="text-align:center; color:var(--text-muted);">No completed workouts yet.</div>'}`;
+        return;
+      }
+
+      if (state.view === 'workout') {
         if (!state.activeWorkout) {
           content.innerHTML = `<div class="card" style="text-align:center; margin-top: 20px;">No active workout.<br><br><button class="btn btn-primary" onclick="nav('home')">Go Home</button></div>`;
           return;
         }
-        
         const w = state.activeWorkout;
+        const history = DB.get('workouts') || [];
+
+        function getLastSession(exId) {
+          for (let i = history.length - 1; i >= 0; i--) {
+            const found = history[i].exercises.find(e => e.id === exId);
+            if (found && found.sets && found.sets.length > 0) {
+              return { date: history[i].date, sets: found.sets };
+            }
+          }
+          return null;
+        }
+
         let exercisesHtml = w.exercises.map((ex, exIdx) => {
           const hasWeight = ex.fields.includes('weight');
-          const hasReps = ex.fields.includes('reps');
-          const hasTime = ex.fields.includes('time');
-          
+          const hasReps   = ex.fields.includes('reps');
+          const hasTime   = ex.fields.includes('time');
+
+          const last = getLastSession(ex.id);
+          let lastHtml = '';
+          if (last) {
+            const setChips = last.sets.map(s => {
+              const parts = [];
+              if (hasWeight && s.weight) parts.push(`${s.weight}lb`);
+              if (hasReps   && s.reps)   parts.push(`${s.reps}r`);
+              if (hasTime   && s.time)   parts.push(`${s.time}s`);
+              return `<span style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 7px;font-size:11px;color:var(--text-muted);white-space:nowrap;">${parts.join(' · ')}</span>`;
+            }).join('');
+            lastHtml = `
+              <div style="margin-bottom:10px;">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:5px;">
+                  Last session <span style="color:var(--accent);">${last.date}</span>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:5px;">${setChips}</div>
+              </div>`;
+          }
+
           let setsHtml = ex.sets.map((set, setIdx) => `
             <tr>
               <td>${set.isDrop ? '<span class="badge drop-badge">DS</span>' : setIdx + 1}</td>
-              ${hasWeight ? `<td><input type="number" class="set-input" value="${set.weight}" onchange="updateSet(${exIdx}, ${setIdx}, 'weight', this.value)" placeholder="lbs"></td>` : ''}
-              ${hasReps ? `<td><input type="number" class="set-input" value="${set.reps}" onchange="updateSet(${exIdx}, ${setIdx}, 'reps', this.value)" placeholder="reps"></td>` : ''}
-              ${hasTime ? `<td><input type="number" class="set-input" value="${set.time}" onchange="updateSet(${exIdx}, ${setIdx}, 'time', this.value)" placeholder="sec"></td>` : ''}
-              <td><button class="check-btn ${set.completed ? 'done' : ''}" onclick="toggleSet(${exIdx}, ${setIdx})">✔</button></td>
-            </tr>
-          `).join('');
+              ${hasWeight ? `<td><input type="number" class="set-input" value="${set.weight}" onchange="updateSet(${exIdx},${setIdx},'weight',this.value)" placeholder="lbs"></td>` : ''}
+              ${hasReps   ? `<td><input type="number" class="set-input" value="${set.reps}"   onchange="updateSet(${exIdx},${setIdx},'reps',this.value)"   placeholder="reps"></td>` : ''}
+              ${hasTime   ? `<td><input type="number" class="set-input" value="${set.time}"   onchange="updateSet(${exIdx},${setIdx},'time',this.value)"   placeholder="sec"></td>` : ''}
+              <td><button class="check-btn ${set.completed ? 'done' : ''}" onclick="toggleSet(${exIdx},${setIdx})">✔</button></td>
+            </tr>`).join('');
 
           return `
             <div class="card ${ex.isSuperset ? 'superset-bracket' : ''}">
-              <div class="flex-between" style="margin-bottom: 12px;">
+              <div class="flex-between" style="margin-bottom:8px;">
                 <div>
                   ${ex.isSuperset ? '<span class="badge" style="background:#38bdf8;">Superset</span>' : ''}
-                  <strong style="font-size: 18px;">${ex.name}</strong>
+                  <strong style="font-size:18px;">${ex.name}</strong>
                 </div>
-                <button class="btn" style="width:auto; padding: 6px 10px; font-size:12px;" onclick="removeEx(${exIdx})">✕</button>
+                <button class="btn" style="width:auto;padding:6px 10px;font-size:12px;" onclick="removeEx(${exIdx})">✕</button>
               </div>
+              ${lastHtml}
               <table>
                 <tr>
-                  <th style="width: 15%;">Set</th>
+                  <th style="width:15%;">Set</th>
                   ${hasWeight ? '<th>Weight</th>' : ''}
-                  ${hasReps ? '<th>Reps</th>' : ''}
-                  ${hasTime ? '<th>Time</th>' : ''}
-                  <th style="width: 20%;">Done</th>
+                  ${hasReps   ? '<th>Reps</th>'   : ''}
+                  ${hasTime   ? '<th>Time</th>'   : ''}
+                  <th style="width:20%;">Done</th>
                 </tr>
                 ${setsHtml}
               </table>
-              <div style="display:flex; gap:8px; margin-top:16px;">
-                <button class="btn" style="font-size:13px; padding: 10px;" onclick="addSet(${exIdx})">+ Set</button>
-                <button class="btn" style="font-size:13px; padding: 10px;" onclick="addDropSet(${exIdx})">+ Drop Set</button>
-                ${exIdx > 0 && !ex.isSuperset ? `<button class="btn" style="font-size:13px; padding: 10px;" onclick="toggleSuperset(${exIdx})">🔗 Superset</button>` : ''}
-                ${ex.isSuperset ? `<button class="btn" style="font-size:13px; padding: 10px;" onclick="toggleSuperset(${exIdx})">Unlink</button>` : ''}
+              <div style="display:flex;gap:8px;margin-top:16px;">
+                <button class="btn" style="font-size:13px;padding:10px;" onclick="addSet(${exIdx})">+ Set</button>
+                <button class="btn" style="font-size:13px;padding:10px;" onclick="addDropSet(${exIdx})">+ Drop Set</button>
+                ${exIdx > 0 && !ex.isSuperset ? `<button class="btn" style="font-size:13px;padding:10px;" onclick="toggleSuperset(${exIdx})">🔗 Superset</button>` : ''}
+                ${ex.isSuperset ? `<button class="btn" style="font-size:13px;padding:10px;" onclick="toggleSuperset(${exIdx})">Unlink</button>` : ''}
               </div>
-            </div>
-          `;
+            </div>`;
         }).join('');
 
         content.innerHTML = `
           <div class="header flex-between">
-            <div style="display:flex; align-items:center; gap: 10px;">
+            <div style="display:flex;align-items:center;gap:10px;">
               <span id="workout-timer" class="timer-display">0:00</span>
-              <button class="btn" style="width:auto; padding:4px 8px; font-size:12px;" onclick="togglePause()">
+              <button class="btn" style="width:auto;padding:4px 8px;font-size:12px;" onclick="togglePause()">
                 ${w.isPaused ? '▶ Resume' : '⏸ Pause'}
               </button>
             </div>
-            <button class="btn btn-primary" style="width:auto; padding:8px 16px; font-size:14px;" onclick="finishWorkout()">Finish</button>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-danger" style="width:auto;padding:8px 12px;font-size:14px;background:transparent;" onclick="cancelWorkout()">Cancel</button>
+              <button class="btn btn-primary" style="width:auto;padding:8px 16px;font-size:14px;" onclick="finishWorkout()">Finish</button>
+            </div>
           </div>
-          <div style="padding: 12px 12px 0 12px;">
-            <div class="badge type-badge" style="display:inline-block; font-size:14px; padding: 4px 8px;">${w.type}</div>
+          <div style="padding:12px 12px 0 12px;">
+            <div class="badge type-badge" style="display:inline-block;font-size:14px;padding:4px 8px;">${w.type}</div>
             <strong style="margin-left:8px;">${w.name}</strong>
           </div>
           ${exercisesHtml}
-          <div style="padding: 12px; padding-bottom: 40px;">
-            <button class="btn" style="border-style: dashed; padding: 16px;" onclick="openSearchModal()">🔍 Add Exercise</button>
-          </div>
-        `;
+          <div style="padding:12px;padding-bottom:40px;">
+            <button class="btn" style="border-style:dashed;padding:16px;" onclick="openSearchModal()">🔍 Add Exercise</button>
+          </div>`;
         startTimerTick();
+        return;
       }
-      
-      else if (state.view === 'calendar') {
+
+      if (state.view === 'calendar') {
         const history = DB.get('workouts') || [];
         const today = new Date();
         const year = today.getFullYear();
         const month = today.getMonth();
-        
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
         let daysHtml = '';
-        for(let i = 0; i < firstDay; i++) daysHtml += `<div></div>`; // padding
-        
+        for(let i = 0; i < firstDay; i++) daysHtml += `<div></div>`;
         for(let day = 1; day <= daysInMonth; day++) {
           const dateStr = new Date(year, month, day).toLocaleDateString();
           const dayWorkouts = history.filter(w => w.date === dateStr);
           const hasWorkout = dayWorkouts.length > 0;
-          
-          let tooltip = hasWorkout ? `${dayWorkouts.map(w => w.type).join(', ')}` : '';
-          
+          const tooltip = hasWorkout ? dayWorkouts.map(w => w.type).join(', ') : 'Rest Day';
           daysHtml += `
-            <div class="cal-day ${hasWorkout ? 'active' : ''}" onclick="alert('${dateStr}: ${tooltip || 'Rest Day'}')">
+            <div class="cal-day ${hasWorkout ? 'active' : ''}" onclick="showDay(this)" data-date="${dateStr}" data-info="${tooltip}">
               ${day}
               ${hasWorkout ? '<div class="cal-dot"></div>' : ''}
-            </div>
-          `;
+            </div>`;
         }
-
         content.innerHTML = `
           <div class="header">Calendar</div>
           <div class="card">
-            <h3 style="text-align:center; margin-bottom: 12px;">${today.toLocaleString('default', { month: 'long' })} ${year}</h3>
+            <h3 style="text-align:center;margin-bottom:12px;">${today.toLocaleString('default', { month: 'long' })} ${year}</h3>
             <div class="cal-grid">
               <div class="cal-header">Sun</div><div class="cal-header">Mon</div><div class="cal-header">Tue</div>
               <div class="cal-header">Wed</div><div class="cal-header">Thu</div><div class="cal-header">Fri</div><div class="cal-header">Sat</div>
               ${daysHtml}
             </div>
-          </div>
-        `;
+          </div>`;
+        return;
       }
-      
-      else if (state.view === 'stats') {
+
+      if (state.view === 'exercises') {
+        const exercises = [...getExercises()].sort((a, b) => a.name.localeCompare(b.name));
+        const allExercises = getExercises();
+        const rows = exercises.map(ex => {
+          const realIdx = allExercises.findIndex(e => e.id === ex.id);
+          const fieldLabel = [
+            ex.fields.includes('weight') ? 'Weight' : '',
+            ex.fields.includes('reps')   ? 'Reps'   : '',
+            ex.fields.includes('time')   ? 'Time'   : ''
+          ].filter(Boolean).join(' + ');
+          return `
+            <div class="ex-row">
+              <div>
+                <div style="font-weight:600;">${ex.name}</div>
+                <div class="ex-meta">${fieldLabel}</div>
+              </div>
+              <button class="del-btn" onclick="deleteExercise(${realIdx})" title="Remove">✕</button>
+            </div>`;
+        }).join('');
+
         content.innerHTML = `
-          <div class="header flex-between">
-            <span>Analytics & Profile</span>
-            <span style="font-size: 14px; color: var(--accent);">👤 ${state.username}</span>
+          <div class="header">Exercises</div>
+          <div class="card">
+            <div style="font-weight:600;margin-bottom:12px;">Add New Exercise</div>
+            <input type="text" id="new-ex-name" class="input-field" placeholder="Exercise name (e.g., Tricep Pushdown)">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Track fields (select at least one):</div>
+            <div class="field-toggles">
+              <button class="field-toggle on" id="toggle-weight" onclick="toggleField('weight')">Weight</button>
+              <button class="field-toggle on" id="toggle-reps"   onclick="toggleField('reps')">Reps</button>
+              <button class="field-toggle"    id="toggle-time"   onclick="toggleField('time')">Time</button>
+            </div>
+            <button class="btn btn-primary" onclick="addNewExercise()">+ Add Exercise</button>
           </div>
           <div class="card">
-            <h3 style="margin-bottom: 10px;">Workouts Past 7 Days</h3>
-            <canvas id="weeklyChart" height="200"></canvas>
+            <div style="font-weight:600;margin-bottom:4px;">All Exercises <span style="color:var(--text-muted);font-weight:normal;">(${exercises.length})</span></div>
+            ${rows || '<div style="color:var(--text-muted);padding:12px 0;">No exercises yet.</div>'}
           </div>
           <div class="card">
-            <h3 style="margin-bottom: 10px;">Account Settings</h3>
-            <button class="btn" style="margin-bottom: 10px;" onclick="syncData()">☁️ Force Cloud Sync</button>
-            <button class="btn btn-danger" onclick="logout()">Log Out</button>
-          </div>
-        `;
-        renderChart();
+            <button class="btn btn-danger" onclick="resetExercises()">↺ Reset to Defaults</button>
+          </div>`;
+        return;
       }
     }
 
-    // --- WORKOUT ENGINE ---
+    function toggleField(field) {
+      const btn = document.getElementById('toggle-' + field);
+      const allToggles = ['weight', 'reps', 'time'];
+      const currentlyOn = allToggles.filter(f => document.getElementById('toggle-' + f).classList.contains('on'));
+      if (btn.classList.contains('on') && currentlyOn.length === 1) return;
+      btn.classList.toggle('on');
+    }
+
+    function addNewExercise() {
+      const name = document.getElementById('new-ex-name').value.trim();
+      if (!name) return alert("Enter an exercise name.");
+      const fields = ['weight', 'reps', 'time'].filter(f =>
+        document.getElementById('toggle-' + f).classList.contains('on')
+      );
+      if (fields.length === 0) return alert("Select at least one field.");
+      const exercises = getExercises();
+      const id = name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now();
+      exercises.push({ id, name, fields });
+      DB.set('exercises', exercises);
+      render();
+    }
+
+    function deleteExercise(idx) {
+      const exercises = getExercises();
+      const ex = exercises[idx];
+      if (!confirm(`Remove "${ex.name}"?`)) return;
+      exercises.splice(idx, 1);
+      DB.set('exercises', exercises);
+      render();
+    }
+
+    function resetExercises() {
+      if (!confirm("Reset to default exercise list? Your custom exercises will be removed.")) return;
+      DB.set('exercises', DEFAULT_EXERCISES);
+      render();
+    }
+
     function startWorkout() {
       const name = document.getElementById('new-workout-name').value || "My Workout";
       const type = document.getElementById('new-workout-type').value;
-      
       state.activeWorkout = {
-        name: name,
-        type: type,
+        name, type,
         date: new Date().toLocaleDateString(),
         startTime: Date.now(),
         pauseTime: 0,
@@ -418,7 +512,6 @@
         ex.sets.forEach(s => { s.completed = false; });
         return ex;
       });
-
       state.activeWorkout = {
         name: template.name,
         type: template.type,
@@ -433,39 +526,49 @@
       nav('workout');
     }
 
-    // --- MODAL & SEARCH ---
     function openSearchModal() {
-      const modalHtml = `
+      const exercises = [...getExercises()].sort((a, b) => a.name.localeCompare(b.name));
+      document.getElementById('modal-container').innerHTML = `
         <div class="modal-overlay" onclick="closeModal(event)">
           <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="flex-between" style="margin-bottom: 16px;">
-              <h2 style="font-size: 20px;">Add Exercise</h2>
-              <button class="btn" style="width: auto; padding: 4px 12px;" onclick="closeModal(true)">Done</button>
+            <div class="flex-between" style="margin-bottom:16px;">
+              <h2 style="font-size:20px;">Add Exercise</h2>
+              <button class="btn" style="width:auto;padding:4px 12px;" onclick="closeModal(true)">Done</button>
             </div>
             <input type="text" id="ex-search" class="input-field" placeholder="Search exercises..." onkeyup="filterSearch()">
             <div class="search-list" id="search-results">
-              ${EXERCISES.map(ex => `
+              ${exercises.map(ex => `
                 <div class="search-item" onclick="addExercise('${ex.id}')">
-                  <span>${ex.name}</span>
-                  <span style="color:var(--accent); font-size:20px;">+</span>
-                </div>
-              `).join('')}
+                  <div>
+                    <div>${ex.name}</div>
+                    <div style="font-size:11px;color:var(--text-muted);">${[
+                      ex.fields.includes('weight') ? 'Weight' : '',
+                      ex.fields.includes('reps')   ? 'Reps'   : '',
+                      ex.fields.includes('time')   ? 'Time'   : ''
+                    ].filter(Boolean).join(' + ')}</div>
+                  </div>
+                  <span style="color:var(--accent);font-size:20px;">+</span>
+                </div>`).join('')}
             </div>
           </div>
-        </div>
-      `;
-      document.getElementById('modal-container').innerHTML = modalHtml;
+        </div>`;
     }
 
     function filterSearch() {
       const q = document.getElementById('ex-search').value.toLowerCase();
-      const results = EXERCISES.filter(ex => ex.name.toLowerCase().includes(q));
-      document.getElementById('search-results').innerHTML = results.map(ex => `
+      const exercises = [...getExercises()].filter(ex => ex.name.toLowerCase().includes(q)).sort((a, b) => a.name.localeCompare(b.name));
+      document.getElementById('search-results').innerHTML = exercises.map(ex => `
         <div class="search-item" onclick="addExercise('${ex.id}')">
-          <span>${ex.name}</span>
-          <span style="color:var(--accent); font-size:20px;">+</span>
-        </div>
-      `).join('');
+          <div>
+            <div>${ex.name}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${[
+              ex.fields.includes('weight') ? 'Weight' : '',
+              ex.fields.includes('reps')   ? 'Reps'   : '',
+              ex.fields.includes('time')   ? 'Time'   : ''
+            ].filter(Boolean).join(' + ')}</div>
+          </div>
+          <span style="color:var(--accent);font-size:20px;">+</span>
+        </div>`).join('');
     }
 
     function closeModal(force = false) {
@@ -476,7 +579,8 @@
     }
 
     function addExercise(id) {
-      const exDef = EXERCISES.find(e => e.id === id);
+      const exDef = getExercises().find(e => e.id === id);
+      if (!exDef) return;
       state.activeWorkout.exercises.push({
         id: exDef.id, name: exDef.name, fields: exDef.fields, isSuperset: false,
         sets: [{ weight: '', reps: '', time: '', completed: false, isDrop: false }]
@@ -486,7 +590,6 @@
       setTimeout(() => event.currentTarget.style.backgroundColor = 'transparent', 200);
     }
 
-    // --- EXERCISE MANAGEMENT ---
     function addSet(exIdx) {
       state.activeWorkout.exercises[exIdx].sets.push({ weight: '', reps: '', time: '', completed: false, isDrop: false });
       saveActive(); render();
@@ -509,7 +612,7 @@
       set.completed = !set.completed;
       saveActive(); render();
     }
-    
+
     function removeEx(exIdx) {
       if(confirm("Remove this exercise?")) {
         state.activeWorkout.exercises.splice(exIdx, 1);
@@ -525,7 +628,6 @@
       saveActive(); render();
     }
 
-    // --- TIMER & SAVING ---
     function togglePause() {
       const w = state.activeWorkout;
       if(w.isPaused) {
@@ -545,7 +647,6 @@
           const w = state.activeWorkout;
           const el = document.getElementById('workout-timer');
           if(!el) return;
-          
           let elapsedMs = Date.now() - w.startTime - w.pauseTime;
           if(w.isPaused) elapsedMs -= (Date.now() - w.lastPauseStart);
           el.innerText = formatTime(Math.max(0, Math.floor(elapsedMs / 1000)));
@@ -557,85 +658,94 @@
       const h = Math.floor(sec / 3600);
       const m = Math.floor((sec % 3600) / 60);
       const s = sec % 60;
-      if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-      return `${m}:${s.toString().padStart(2, '0')}`;
+      if (h > 0) return `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+      return `${m}:${s.toString().padStart(2,'0')}`;
     }
 
     function finishWorkout() {
-      const saveTemplate = confirm("Do you want to save this layout as a Template for future use?");
-      
+      const saveTemplate = confirm("Save this workout as a template for future use?");
       const w = state.activeWorkout;
       let finalElapsed = Date.now() - w.startTime - w.pauseTime;
       if(w.isPaused) finalElapsed -= (Date.now() - w.lastPauseStart);
       w.duration = Math.floor(finalElapsed / 1000);
-      
       if(saveTemplate) {
         const templates = DB.get('templates') || [];
-        templates.push({ name: w.name, type: w.type, exercises: w.exercises });
+        templates.push({ name: w.name, type: w.type, exercises: JSON.parse(JSON.stringify(w.exercises)) });
         DB.set('templates', templates);
       }
-      
       const history = DB.get('workouts') || [];
       history.push(w);
       DB.set('workouts', history);
-      
       state.activeWorkout = null;
       DB.set('activeWorkout', null);
       clearInterval(state.timerInterval);
-      
-      // Auto-sync to database!
       syncData();
-      
       nav('home');
     }
 
-    function saveActive() {
-      DB.set('activeWorkout', state.activeWorkout);
+    function saveActive() { DB.set('activeWorkout', state.activeWorkout); }
+
+    function cancelWorkout() {
+      if(confirm("Cancel this workout? It won't be saved.")) {
+        state.activeWorkout = null;
+        DB.set('activeWorkout', null);
+        if(state.timerInterval) clearInterval(state.timerInterval);
+        nav('home');
+      }
     }
+    function getRelativeTime(dateStr) {
+    const workoutDate = new Date(dateStr);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - workoutDate) / 1000);
+    const diffInDays = Math.floor(diffInSeconds / 86400);
 
-    // --- ANALYTICS CHART ---
-    function renderChart() {
-      setTimeout(() => {
-        const ctx = document.getElementById('weeklyChart');
-        if(!ctx) return;
-        
-        const history = DB.get('workouts') || [];
-        const labels = [];
-        const data = [];
-        for(let i=6; i>=0; i--) {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          const dateStr = d.toLocaleDateString();
-          labels.push(d.toLocaleDateString('en-US', {weekday: 'short'}));
-          const count = history.filter(w => w.date === dateStr).length;
-          data.push(count);
-        }
-
-        new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: labels,
-            datasets: [{
-              label: 'Workouts',
-              data: data,
-              backgroundColor: '#c8ff00',
-              borderRadius: 4
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              y: { beginAtZero: true, ticks: { stepSize: 1, color: '#888' }, grid: { color: '#2e2e2e' } },
-              x: { ticks: { color: '#888' }, grid: { display: false } }
-            },
-            plugins: { legend: { display: false } }
-          }
-        });
-      }, 100);
+    if (diffInDays < 1) return "Today";
+    if (diffInDays === 1) return "Yesterday";
+    if (diffInDays < 30) return `${diffInDays} days ago`;
+    
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths < 12) return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
+    
+    const diffInYears = Math.floor(diffInDays / 365);
+    return `Over ${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
     }
+    function viewWorkoutDetails(idx) {
+  const history = DB.get('workouts') || [];
+  const w = [...history].reverse()[idx]; // Match the reverse order in Home
+  
+  let exercisesHtml = w.exercises.map(ex => `
+    <div style="margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+      <div style="font-weight: bold; color: var(--accent);">${ex.name}</div>
+      <div style="font-size: 13px; margin-top: 5px;">
+        ${ex.sets.map((s, i) => `
+          <div style="display: flex; gap: 10px; color: var(--text-muted);">
+            <span>Set ${i+1}:</span>
+            <span>${s.weight ? s.weight + 'lb' : ''} ${s.reps ? '× ' + s.reps : ''} ${s.time ? s.time + 's' : ''}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
 
-    // INIT
-    nav(state.view); // Initializes to login or home depending on state
+  document.getElementById('modal-container').innerHTML = `
+    <div class="modal-overlay" onclick="closeModal(true)">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="flex-between" style="margin-bottom: 16px;">
+          <h3>${w.name} Details</h3>
+          <button class="btn" style="width: auto; padding: 4px 12px;" onclick="closeModal(true)">Close</button>
+        </div>
+        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">
+          ${w.date} • ${Math.round(w.duration/60)} mins
+        </div>
+        <div class="search-list" style="padding-right: 5px;">
+          ${exercisesHtml}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+    nav(state.view);
   </script>
 </body>
 </html>
