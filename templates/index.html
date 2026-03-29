@@ -254,7 +254,10 @@
           };
 
           content.innerHTML = `
-            <div class="header">Iron Log</div>
+            <div class="header flex-between">
+  <span>Iron Log</span>
+  <button class="btn" style="width: auto; padding: 6px 12px; font-size: 12px;" onclick="logout()">Log Out</button>
+</div>
             ${state.activeWorkout ? `
               <div class="card" style="border-color: var(--accent);" onclick="nav('workout')">
                 <div class="flex-between">
