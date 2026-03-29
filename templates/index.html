@@ -134,10 +134,16 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
+        
+        // Catch Python server crashes
+        if (!res.ok) {
+           console.error("Server Error Response:", await res.text());
+           return { error: `Server error (${res.status}). Check PythonAnywhere.` };
+        }
         return await res.json();
       } catch (err) {
         console.error("API Error:", err);
-        return { error: "Network error" };
+        return { error: "Network error. Server might be offline." };
       }
     }
 

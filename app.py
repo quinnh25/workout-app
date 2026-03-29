@@ -28,16 +28,22 @@ class User(db.Model):
 # Create tables and auto-upgrade older databases
 with app.app_context():
     db.create_all()
-    
-    # This safely attempts to add the new columns to your existing database.
-    # If they already exist, it just silently ignores the error.
     try:
         db.session.execute(db.text('ALTER TABLE user ADD COLUMN templates_json TEXT DEFAULT "[]"'))
         db.session.execute(db.text('ALTER TABLE user ADD COLUMN exercises_json TEXT DEFAULT "null"'))
         db.session.execute(db.text('ALTER TABLE user ADD COLUMN active_workout_json TEXT DEFAULT "null"'))
         db.session.commit()
     except Exception:
-        db.session.rollback() # Columns already exist, move on!
+        db.session.rollback()
+
+# --- HELPER: Safely parse JSON to prevent 500 crashes ---
+def safe_load(json_str, default):
+    if not json_str or json_str == "null":
+        return default
+    try:
+        return json.loads(json_str)
+    except:
+        return default
 
 # --- SERVE THE FRONTEND ---
 @app.route('/')
@@ -63,24 +69,18 @@ def login():
     user = User.query.filter_by(username=data['username']).first()
 
     if user and check_password_hash(user.password_hash, data['password']):
-        # Parse the JSON back into Python dictionaries to send to the frontend
-        workouts = json.loads(user.workouts_json) if user.workouts_json else []
-        templates = json.loads(user.templates_json) if user.templates_json else []
-        exercises = json.loads(user.exercises_json) if user.exercises_json != "null" else None
-        active_workout = json.loads(user.active_workout_json) if user.active_workout_json != "null" else None
-
+        # Uses the safe_load helper so older accounts don't crash the server
         return jsonify({
-    'message': 'Logged in', 
-    'user_id': user.id, 
-    'workouts': json.loads(user.workouts_json),
-    'templates': json.loads(user.templates_json), # MAKE SURE THIS LINE EXISTS
-    'exercises': json.loads(user.exercises_json), # AND THIS ONE
-    'activeWorkout': json.loads(user.active_workout_json) # AND THIS ONE
-})
+            'message': 'Logged in', 
+            'user_id': user.id, 
+            'workouts': safe_load(user.workouts_json, []),
+            'templates': safe_load(user.templates_json, []),
+            'exercises': safe_load(user.exercises_json, None),
+            'activeWorkout': safe_load(user.active_workout_json, None)
+        })
         
     return jsonify({'error': 'Invalid credentials'}), 401
 
-# Unified endpoint to save ALL user data at once
 @app.route('/sync_data', methods=['POST'])
 def sync_data():
     data = request.json
