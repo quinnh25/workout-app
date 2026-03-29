@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>IRON LOG</title>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* CORE MOBILE STYLES */
+    :root { --bg: #080808; --bg-card: #141414; --accent: #c8ff00; --text: #f2f2f2; --text-muted: #888; --border: #2e2e2e; --danger: #ff4444; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Exo 2', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+    
+    /* LAYOUT */
+    #main-content { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+    .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 100; transition: 0.3s; }
+    .nav-btn { background: none; border: none; color: var(--text-muted); font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px; width: 25%; cursor: pointer;}
+    .nav-btn.active { color: var(--accent); font-weight: bold; }
+    
+    /* CARDS & INPUTS */
+    .card { background: var(--bg-card); margin: 12px; border-radius: 12px; border: 1px solid var(--border); padding: 16px; }
+    .btn { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); padding: 12px 16px; border-radius: 8px; font-weight: 600; width: 100%; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;}
+    .btn-primary { background: var(--accent); color: #000; border: none; }
+    .btn-danger { background: rgba(255, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); }
+    .input-field { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 6px; width: 100%; font-size: 16px; margin-bottom: 10px; }
+    select.input-field { appearance: none; }
+    
+    /* EXERCISE TABLES */
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th { color: var(--text-muted); font-size: 12px; text-align: center; padding-bottom: 8px; font-weight: normal; }
+    td { padding: 6px 2px; }
+    .set-input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); text-align: center; padding: 12px 4px; border-radius: 6px; font-size: 16px; }
+    .set-input:focus { border-color: var(--accent); outline: none; }
+    .check-btn { width: 100%; height: 44px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: transparent; display: flex; justify-content: center; align-items: center; font-size: 18px; transition: 0.2s; }
+    .check-btn.done { background: rgba(200,255,0,0.2); border-color: var(--accent); color: var(--accent); }
+    
+    /* SUPERSET & BADGES */
+    .superset-bracket { border-left: 3px solid #38bdf8; border-radius: 0 12px 12px 0; margin-top: 4px; border-top: none;}
+    .badge { font-size: 10px; background: #333; color: #fff; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
+    .drop-badge { background: #ff4040; }
+    .type-badge { background: var(--accent); color: #000; }
+    
+    /* MODALS & AUTH */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 200; display: flex; justify-content: center; align-items: flex-end; }
+    .modal-content { background: var(--bg-card); width: 100%; height: 85vh; border-radius: 20px 20px 0 0; padding: 20px; display: flex; flex-direction: column; }
+    .search-list { flex: 1; overflow-y: auto; margin-top: 10px; }
+    .search-item { padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    
+    .auth-container { display: flex; flex-direction: column; justify-content: center; height: 100vh; padding: 20px; }
+    .auth-brand { text-align: center; font-size: 32px; font-weight: bold; margin-bottom: 40px; color: var(--accent); letter-spacing: 2px;}
+
+    /* CALENDAR */
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
+    .cal-header { text-align: center; font-size: 12px; color: var(--text-muted); padding: 5px 0; }
+    .cal-day { aspect-ratio: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; position: relative; }
+    .cal-day.active { border-color: var(--accent); background: rgba(200,255,0,0.1); }
+    .cal-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-top: 2px; }
+
+    /* UTILITIES */
+    .flex-between { display: flex; justify-content: space-between; align-items: center; }
+    .header { font-size: 22px; font-weight: 700; padding: 16px; border-bottom: 1px solid var(--border); background: var(--bg-card); position: sticky; top: 0; z-index: 10; }
+    .hidden { display: none !important; }
+    .timer-display { font-variant-numeric: tabular-nums; font-size: 18px; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <div id="main-content"></div>
+
+  <nav class="bottom-nav" id="main-nav" style="display: none;">
+    <button class="nav-btn active" onclick="nav('home')">Home</button>
+    <button class="nav-btn" onclick="nav('workout')">Workout</button>
+    <button class="nav-btn" onclick="nav('calendar')">Calendar</button>
+    <button class="nav-btn" onclick="nav('stats')">Stats</button>
+  </nav>
+
+  <div id="modal-container"></div>
+
+  <script>
+    // --- DATABASE & STATE ---
+    const DB = {
+      get: (key) => JSON.parse(localStorage.getItem(`ironlog_${key}`)) || null,
+      set: (key, val) => localStorage.setItem(`ironlog_${key}`, JSON.stringify(val)),
+      clear: () => { localStorage.clear(); }
+    };
+
+    let state = {
+      user_id: DB.get('user_id'),
+      username: DB.get('username'),
+      view: DB.get('user_id') ? 'home' : 'auth',
+      activeWorkout: DB.get('activeWorkout'),
+      timerInterval: null
+    };
+
+    // Global Exercise Database
+    const EXERCISES = [
+      { id: 'bench', name: 'Bench Press', fields: ['weight', 'reps'] },
+      { id: 'squat', name: 'Barbell Squat', fields: ['weight', 'reps'] },
+      { id: 'deadlift', name: 'Deadlift', fields: ['weight', 'reps'] },
+      { id: 'ohp', name: 'Overhead Press', fields: ['weight', 'reps'] },
+      { id: 'pullup', name: 'Pull-Ups', fields: ['weight', 'reps'] }, 
+      { id: 'row', name: 'Barbell Row', fields: ['weight', 'reps'] },
+      { id: 'curl', name: 'Bicep Curl', fields: ['weight', 'reps'] },
+      { id: 'plank', name: 'Plank', fields: ['time'] },
+      { id: 'run', name: 'Treadmill', fields: ['time'] },
+      { id: 'bike', name: 'Stationary Bike', fields: ['time'] }
+    ];
+
+    const WORKOUT_TYPES = ["Upper", "Lower", "Push", "Pull", "Legs", "Full Body", "Cardio", "Other"];
+
+    // --- CLOUD SYNC & AUTH ---
+    async function apiCall(endpoint, data) {
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        return await res.json();
+      } catch (err) {
+        alert("Network error. Check your connection.");
+        return { error: "Network error" };
+      }
+    }
+
+    async function login() {
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+      if(!u || !p) return alert("Enter username and password");
+      
+      const res = await apiCall('/login', {username: u, password: p});
+      if(res.error) return alert(res.error);
+      
+      // Save login state and server data
+      DB.set('user_id', res.user_id);
+      DB.set('username', u);
+      DB.set('workouts', res.workouts || []);
+      
+      state.user_id = res.user_id;
+      state.username = u;
+      nav('home');
+    }
+
+    async function register() {
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+      if(!u || !p) return alert("Enter username and password");
+      
+      const res = await apiCall('/register', {username: u, password: p});
+      if(res.error) return alert(res.error);
+      
+      alert("Account created! You can now log in.");
+    }
+
+    function logout() {
+      if(!confirm("Are you sure you want to log out?")) return;
+      DB.clear();
+      state.user_id = null;
+      state.activeWorkout = null;
+      nav('auth');
+    }
+
+    async function syncData() {
+      if(!state.user_id) return;
+      const workouts = DB.get('workouts') || [];
+      const res = await apiCall('/sync_workouts', { user_id: state.user_id, workouts: workouts });
+      console.log("Sync status:", res.message);
+    }
+
+    // --- NAVIGATION ---
+    function nav(view) {
+      state.view = view;
+      const navBar = document.getElementById('main-nav');
+      
+      if(view === 'auth') {
+        navBar.style.display = 'none';
+      } else {
+        navBar.style.display = 'flex';
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        // Find the button that matches the view to highlight it
+        const btns = Array.from(document.querySelectorAll('.nav-btn'));
+        const activeBtn = btns.find(b => b.innerText.toLowerCase() === view);
+        if(activeBtn) activeBtn.classList.add('active');
+      }
+      render();
+    }
+
+    // --- RENDER LOGIC ---
+    function render() {
+      const content = document.getElementById('main-content');
+      
+      if (state.view === 'auth') {
+        content.innerHTML = `
+          <div class="auth-container">
+            <div class="auth-brand">IRON LOG</div>
+            <div class="card" style="padding: 24px;">
+              <input type="text" id="username" class="input-field" placeholder="Username" style="margin-bottom: 16px;">
+              <input type="password" id="password" class="input-field" placeholder="Password" style="margin-bottom: 24px;">
+              <button class="btn btn-primary" style="margin-bottom: 12px; padding: 14px;" onclick="login()">Log In</button>
+              <button class="btn" style="padding: 14px;" onclick="register()">Create Account</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.view === 'home') {
+        const templates = DB.get('templates') || [];
+        const history = DB.get('workouts') || [];
+        
+        content.innerHTML = `
+          <div class="header">Iron Log</div>
+          ${state.activeWorkout ? `
+            <div class="card" style="border-color: var(--accent);" onclick="nav('workout')">
+              <div class="flex-between">
+                <div>
+                  <strong>Resume: ${state.activeWorkout.name}</strong>
+                  <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                    ${state.activeWorkout.isPaused ? 'Paused' : 'In Progress'} • ${state.activeWorkout.type}
+                  </div>
+                </div>
+                <span style="color: var(--accent); font-size: 20px;">▶</span>
+              </div>
+            </div>` : ''}
+            
+          <div class="card">
+            <input type="text" id="new-workout-name" class="input-field" placeholder="Workout Name (e.g., Morning Push)">
+            <select id="new-workout-type" class="input-field">
+              ${WORKOUT_TYPES.map(t => `<option value="${t}">${t}</option>`).join('')}
+            </select>
+            <button class="btn btn-primary" onclick="startWorkout()">+ Start Empty Workout</button>
+          </div>
+
+          ${templates.length > 0 ? `
+          <div class="header" style="border:none; font-size: 18px; padding-bottom: 0;">Templates</div>
+          ${templates.map((t, idx) => `
+            <div class="card flex-between">
+              <div>
+                <strong>${t.name}</strong> <span class="badge type-badge">${t.type}</span>
+                <div style="font-size: 12px; color: var(--text-muted);">${t.exercises.length} Exercises</div>
+              </div>
+              <button class="btn btn-primary" style="width: auto; padding: 6px 12px;" onclick="startFromTemplate(${idx})">Start</button>
+            </div>
+          `).join('')}` : ''}
+
+          <div class="header" style="border:none; font-size: 18px; padding-bottom: 0;">Recent History</div>
+          ${history.reverse().slice(0,5).map(w => `
+            <div class="card">
+              <div class="flex-between">
+                <strong>${w.name} <span class="badge type-badge">${w.type}</span></strong>
+                <span class="text-muted" style="font-size: 12px;">${w.date}</span>
+              </div>
+              <div style="font-size:14px; color:var(--text-muted); margin-top:6px;">
+                ⏱ ${Math.round(w.duration/60)} mins • 🏋️ ${w.exercises.length} exercises
+              </div>
+            </div>
+          `).join('') || '<div class="card" style="text-align:center; color:var(--text-muted);">No completed workouts yet.</div>'}
+        `;
+      } 
+      
+      else if (state.view === 'workout') {
+        if (!state.activeWorkout) {
+          content.innerHTML = `<div class="card" style="text-align:center; margin-top: 20px;">No active workout.<br><br><button class="btn btn-primary" onclick="nav('home')">Go Home</button></div>`;
+          return;
+        }
+        
+        const w = state.activeWorkout;
+        let exercisesHtml = w.exercises.map((ex, exIdx) => {
+          const hasWeight = ex.fields.includes('weight');
+          const hasReps = ex.fields.includes('reps');
+          const hasTime = ex.fields.includes('time');
+          
+          let setsHtml = ex.sets.map((set, setIdx) => `
+            <tr>
+              <td>${set.isDrop ? '<span class="badge drop-badge">DS</span>' : setIdx + 1}</td>
+              ${hasWeight ? `<td><input type="number" class="set-input" value="${set.weight}" onchange="updateSet(${exIdx}, ${setIdx}, 'weight', this.value)" placeholder="lbs"></td>` : ''}
+              ${hasReps ? `<td><input type="number" class="set-input" value="${set.reps}" onchange="updateSet(${exIdx}, ${setIdx}, 'reps', this.value)" placeholder="reps"></td>` : ''}
+              ${hasTime ? `<td><input type="number" class="set-input" value="${set.time}" onchange="updateSet(${exIdx}, ${setIdx}, 'time', this.value)" placeholder="sec"></td>` : ''}
+              <td><button class="check-btn ${set.completed ? 'done' : ''}" onclick="toggleSet(${exIdx}, ${setIdx})">✔</button></td>
+            </tr>
+          `).join('');
+
+          return `
+            <div class="card ${ex.isSuperset ? 'superset-bracket' : ''}">
+              <div class="flex-between" style="margin-bottom: 12px;">
+                <div>
+                  ${ex.isSuperset ? '<span class="badge" style="background:#38bdf8;">Superset</span>' : ''}
+                  <strong style="font-size: 18px;">${ex.name}</strong>
+                </div>
+                <button class="btn" style="width:auto; padding: 6px 10px; font-size:12px;" onclick="removeEx(${exIdx})">✕</button>
+              </div>
+              <table>
+                <tr>
+                  <th style="width: 15%;">Set</th>
+                  ${hasWeight ? '<th>Weight</th>' : ''}
+                  ${hasReps ? '<th>Reps</th>' : ''}
+                  ${hasTime ? '<th>Time</th>' : ''}
+                  <th style="width: 20%;">Done</th>
+                </tr>
+                ${setsHtml}
+              </table>
+              <div style="display:flex; gap:8px; margin-top:16px;">
+                <button class="btn" style="font-size:13px; padding: 10px;" onclick="addSet(${exIdx})">+ Set</button>
+                <button class="btn" style="font-size:13px; padding: 10px;" onclick="addDropSet(${exIdx})">+ Drop Set</button>
+                ${exIdx > 0 && !ex.isSuperset ? `<button class="btn" style="font-size:13px; padding: 10px;" onclick="toggleSuperset(${exIdx})">🔗 Superset</button>` : ''}
+                ${ex.isSuperset ? `<button class="btn" style="font-size:13px; padding: 10px;" onclick="toggleSuperset(${exIdx})">Unlink</button>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        content.innerHTML = `
+          <div class="header flex-between">
+            <div style="display:flex; align-items:center; gap: 10px;">
+              <span id="workout-timer" class="timer-display">0:00</span>
+              <button class="btn" style="width:auto; padding:4px 8px; font-size:12px;" onclick="togglePause()">
+                ${w.isPaused ? '▶ Resume' : '⏸ Pause'}
+              </button>
+            </div>
+            <button class="btn btn-primary" style="width:auto; padding:8px 16px; font-size:14px;" onclick="finishWorkout()">Finish</button>
+          </div>
+          <div style="padding: 12px 12px 0 12px;">
+            <div class="badge type-badge" style="display:inline-block; font-size:14px; padding: 4px 8px;">${w.type}</div>
+            <strong style="margin-left:8px;">${w.name}</strong>
+          </div>
+          ${exercisesHtml}
+          <div style="padding: 12px; padding-bottom: 40px;">
+            <button class="btn" style="border-style: dashed; padding: 16px;" onclick="openSearchModal()">🔍 Add Exercise</button>
+          </div>
+        `;
+        startTimerTick();
+      }
+      
+      else if (state.view === 'calendar') {
+        const history = DB.get('workouts') || [];
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        let daysHtml = '';
+        for(let i = 0; i < firstDay; i++) daysHtml += `<div></div>`; // padding
+        
+        for(let day = 1; day <= daysInMonth; day++) {
+          const dateStr = new Date(year, month, day).toLocaleDateString();
+          const dayWorkouts = history.filter(w => w.date === dateStr);
+          const hasWorkout = dayWorkouts.length > 0;
+          
+          let tooltip = hasWorkout ? `${dayWorkouts.map(w => w.type).join(', ')}` : '';
+          
+          daysHtml += `
+            <div class="cal-day ${hasWorkout ? 'active' : ''}" onclick="alert('${dateStr}: ${tooltip || 'Rest Day'}')">
+              ${day}
+              ${hasWorkout ? '<div class="cal-dot"></div>' : ''}
+            </div>
+          `;
+        }
+
+        content.innerHTML = `
+          <div class="header">Calendar</div>
+          <div class="card">
+            <h3 style="text-align:center; margin-bottom: 12px;">${today.toLocaleString('default', { month: 'long' })} ${year}</h3>
+            <div class="cal-grid">
+              <div class="cal-header">Sun</div><div class="cal-header">Mon</div><div class="cal-header">Tue</div>
+              <div class="cal-header">Wed</div><div class="cal-header">Thu</div><div class="cal-header">Fri</div><div class="cal-header">Sat</div>
+              ${daysHtml}
+            </div>
+          </div>
+        `;
+      }
+      
+      else if (state.view === 'stats') {
+        content.innerHTML = `
+          <div class="header flex-between">
+            <span>Analytics & Profile</span>
+            <span style="font-size: 14px; color: var(--accent);">👤 ${state.username}</span>
+          </div>
+          <div class="card">
+            <h3 style="margin-bottom: 10px;">Workouts Past 7 Days</h3>
+            <canvas id="weeklyChart" height="200"></canvas>
+          </div>
+          <div class="card">
+            <h3 style="margin-bottom: 10px;">Account Settings</h3>
+            <button class="btn" style="margin-bottom: 10px;" onclick="syncData()">☁️ Force Cloud Sync</button>
+            <button class="btn btn-danger" onclick="logout()">Log Out</button>
+          </div>
+        `;
+        renderChart();
+      }
+    }
+
+    // --- WORKOUT ENGINE ---
+    function startWorkout() {
+      const name = document.getElementById('new-workout-name').value || "My Workout";
+      const type = document.getElementById('new-workout-type').value;
+      
+      state.activeWorkout = {
+        name: name,
+        type: type,
+        date: new Date().toLocaleDateString(),
+        startTime: Date.now(),
+        pauseTime: 0,
+        lastPauseStart: null,
+        isPaused: false,
+        exercises: []
+      };
+      saveActive();
+      nav('workout');
+    }
+
+    function startFromTemplate(idx) {
+      const template = DB.get('templates')[idx];
+      const clonedExercises = JSON.parse(JSON.stringify(template.exercises)).map(ex => {
+        ex.sets.forEach(s => { s.completed = false; });
+        return ex;
+      });
+
+      state.activeWorkout = {
+        name: template.name,
+        type: template.type,
+        date: new Date().toLocaleDateString(),
+        startTime: Date.now(),
+        pauseTime: 0,
+        lastPauseStart: null,
+        isPaused: false,
+        exercises: clonedExercises
+      };
+      saveActive();
+      nav('workout');
+    }
+
+    // --- MODAL & SEARCH ---
+    function openSearchModal() {
+      const modalHtml = `
+        <div class="modal-overlay" onclick="closeModal(event)">
+          <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="flex-between" style="margin-bottom: 16px;">
+              <h2 style="font-size: 20px;">Add Exercise</h2>
+              <button class="btn" style="width: auto; padding: 4px 12px;" onclick="closeModal(true)">Done</button>
+            </div>
+            <input type="text" id="ex-search" class="input-field" placeholder="Search exercises..." onkeyup="filterSearch()">
+            <div class="search-list" id="search-results">
+              ${EXERCISES.map(ex => `
+                <div class="search-item" onclick="addExercise('${ex.id}')">
+                  <span>${ex.name}</span>
+                  <span style="color:var(--accent); font-size:20px;">+</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('modal-container').innerHTML = modalHtml;
+    }
+
+    function filterSearch() {
+      const q = document.getElementById('ex-search').value.toLowerCase();
+      const results = EXERCISES.filter(ex => ex.name.toLowerCase().includes(q));
+      document.getElementById('search-results').innerHTML = results.map(ex => `
+        <div class="search-item" onclick="addExercise('${ex.id}')">
+          <span>${ex.name}</span>
+          <span style="color:var(--accent); font-size:20px;">+</span>
+        </div>
+      `).join('');
+    }
+
+    function closeModal(force = false) {
+      if(force || event.target.classList.contains('modal-overlay')) {
+        document.getElementById('modal-container').innerHTML = '';
+        render();
+      }
+    }
+
+    function addExercise(id) {
+      const exDef = EXERCISES.find(e => e.id === id);
+      state.activeWorkout.exercises.push({
+        id: exDef.id, name: exDef.name, fields: exDef.fields, isSuperset: false,
+        sets: [{ weight: '', reps: '', time: '', completed: false, isDrop: false }]
+      });
+      saveActive();
+      event.currentTarget.style.backgroundColor = 'rgba(200,255,0,0.2)';
+      setTimeout(() => event.currentTarget.style.backgroundColor = 'transparent', 200);
+    }
+
+    // --- EXERCISE MANAGEMENT ---
+    function addSet(exIdx) {
+      state.activeWorkout.exercises[exIdx].sets.push({ weight: '', reps: '', time: '', completed: false, isDrop: false });
+      saveActive(); render();
+    }
+
+    function addDropSet(exIdx) {
+      const sets = state.activeWorkout.exercises[exIdx].sets;
+      const lastWeight = sets.length > 0 ? sets[sets.length-1].weight : '';
+      sets.push({ weight: lastWeight, reps: '', time: '', completed: false, isDrop: true });
+      saveActive(); render();
+    }
+
+    function updateSet(exIdx, setIdx, field, val) {
+      state.activeWorkout.exercises[exIdx].sets[setIdx][field] = val;
+      saveActive();
+    }
+
+    function toggleSet(exIdx, setIdx) {
+      const set = state.activeWorkout.exercises[exIdx].sets[setIdx];
+      set.completed = !set.completed;
+      saveActive(); render();
+    }
+    
+    function removeEx(exIdx) {
+      if(confirm("Remove this exercise?")) {
+        state.activeWorkout.exercises.splice(exIdx, 1);
+        if(state.activeWorkout.exercises[exIdx] && state.activeWorkout.exercises[exIdx].isSuperset) {
+          state.activeWorkout.exercises[exIdx].isSuperset = false;
+        }
+        saveActive(); render();
+      }
+    }
+
+    function toggleSuperset(exIdx) {
+      state.activeWorkout.exercises[exIdx].isSuperset = !state.activeWorkout.exercises[exIdx].isSuperset;
+      saveActive(); render();
+    }
+
+    // --- TIMER & SAVING ---
+    function togglePause() {
+      const w = state.activeWorkout;
+      if(w.isPaused) {
+        w.isPaused = false;
+        w.pauseTime += Date.now() - w.lastPauseStart;
+      } else {
+        w.isPaused = true;
+        w.lastPauseStart = Date.now();
+      }
+      saveActive(); render();
+    }
+
+    function startTimerTick() {
+      if(state.timerInterval) clearInterval(state.timerInterval);
+      state.timerInterval = setInterval(() => {
+        if(state.view === 'workout' && state.activeWorkout) {
+          const w = state.activeWorkout;
+          const el = document.getElementById('workout-timer');
+          if(!el) return;
+          
+          let elapsedMs = Date.now() - w.startTime - w.pauseTime;
+          if(w.isPaused) elapsedMs -= (Date.now() - w.lastPauseStart);
+          el.innerText = formatTime(Math.max(0, Math.floor(elapsedMs / 1000)));
+        }
+      }, 1000);
+    }
+
+    function formatTime(sec) {
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function finishWorkout() {
+      const saveTemplate = confirm("Do you want to save this layout as a Template for future use?");
+      
+      const w = state.activeWorkout;
+      let finalElapsed = Date.now() - w.startTime - w.pauseTime;
+      if(w.isPaused) finalElapsed -= (Date.now() - w.lastPauseStart);
+      w.duration = Math.floor(finalElapsed / 1000);
+      
+      if(saveTemplate) {
+        const templates = DB.get('templates') || [];
+        templates.push({ name: w.name, type: w.type, exercises: w.exercises });
+        DB.set('templates', templates);
+      }
+      
+      const history = DB.get('workouts') || [];
+      history.push(w);
+      DB.set('workouts', history);
+      
+      state.activeWorkout = null;
+      DB.set('activeWorkout', null);
+      clearInterval(state.timerInterval);
+      
+      // Auto-sync to database!
+      syncData();
+      
+      nav('home');
+    }
+
+    function saveActive() {
+      DB.set('activeWorkout', state.activeWorkout);
+    }
+
+    // --- ANALYTICS CHART ---
+    function renderChart() {
+      setTimeout(() => {
+        const ctx = document.getElementById('weeklyChart');
+        if(!ctx) return;
+        
+        const history = DB.get('workouts') || [];
+        const labels = [];
+        const data = [];
+        for(let i=6; i>=0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const dateStr = d.toLocaleDateString();
+          labels.push(d.toLocaleDateString('en-US', {weekday: 'short'}));
+          const count = history.filter(w => w.date === dateStr).length;
+          data.push(count);
+        }
+
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Workouts',
+              data: data,
+              backgroundColor: '#c8ff00',
+              borderRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1, color: '#888' }, grid: { color: '#2e2e2e' } },
+              x: { ticks: { color: '#888' }, grid: { display: false } }
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+      }, 100);
+    }
+
+    // INIT
+    nav(state.view); // Initializes to login or home depending on state
+  </script>
+</body>
+</html>
